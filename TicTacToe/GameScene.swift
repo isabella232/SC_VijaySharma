@@ -22,7 +22,6 @@
 
 import SpriteKit
 import GameplayKit
-
 import ReplayKit
 
 class GameScene: SKScene {
@@ -32,12 +31,13 @@ class GameScene: SKScene {
   var boardNode: SKSpriteNode!
   var informationLabel: SKLabelNode!
 	var recordButton: SKSpriteNode!
+  var gamePieceNodes = [SKNode]()
+	weak var viewController: UIViewController!
+	
 	var cameraButton: SKSpriteNode!
 	var cameraView: UIView?
 	var cameraFrame: CGRect!
-  var gamePieceNodes = [SKNode]()
-	weak var viewController: UIViewController!
-  
+	
   var board = Board()
   var strategist: Strategist!
 
@@ -247,7 +247,40 @@ class GameScene: SKScene {
     
     updateBoard(with: Int(boardCoordinate.x), y: Int(boardCoordinate.y))
   }
+    
+  fileprivate func handleTouchEnd(_ touches: Set<UITouch>, with event: UIEvent?) {
+    
+    guard board.currentPlayer.value == .zombie else {
+      return
+    }
+    
+    for touch in touches {
+      for node in nodes(at: touch.location(in: self)) {
+        if node == boardNode {
+          processTouchOnBoard(touch: touch)
+				} else if node == recordButton {
+					processTouchRecord()
+				} else if node == cameraButton {
+					processTouchCamera()
+				}
+      }
+    }
+  }
+  
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesEnded(touches, with: event)
+    
+    handleTouchEnd(touches, with: event)
+  }
+  
+  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesCancelled(touches, with: event)
+    
+    handleTouchEnd(touches, with: event)
+  }
 	
+	// MARK: - ReplayKit
+
 	fileprivate func processTouchRecord() {
 		let recorder = RPScreenRecorder.shared()
 		if !recorder.isRecording {
@@ -260,7 +293,7 @@ class GameScene: SKScene {
 				
 				self.recordButton.texture = SKTexture(imageNamed:"stop")
 				self.cameraButton.texture = SKTexture(imageNamed:"camera")
-				if (recorder.isCameraEnabled) { // if the user declines allowing front camera use
+				if (recorder.isCameraEnabled) { // if the user declines camera use
 					self.cameraButton.isHidden = false
 				}
 			}
@@ -303,38 +336,6 @@ class GameScene: SKScene {
 			}
 		}
 	}
-    
-  fileprivate func handleTouchEnd(_ touches: Set<UITouch>, with event: UIEvent?) {
-    
-    guard board.currentPlayer.value == .zombie else {
-      return
-    }
-    
-    for touch in touches {
-      for node in nodes(at: touch.location(in: self)) {
-        if node == boardNode {
-          processTouchOnBoard(touch: touch)
-				} else if node == recordButton {
-					processTouchRecord()
-				} else if node == cameraButton {
-					processTouchCamera()
-				}
-      }
-    }
-  }
-  
-  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-    super.touchesEnded(touches, with: event)
-    
-    handleTouchEnd(touches, with: event)
-  }
-  
-  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-    super.touchesCancelled(touches, with: event)
-    
-    handleTouchEnd(touches, with: event)
-  }
-  
 }
 
 extension GameScene: RPPreviewViewControllerDelegate {
