@@ -260,7 +260,9 @@ class GameScene: SKScene {
 				
 				self.recordButton.texture = SKTexture(imageNamed:"stop")
 				self.cameraButton.texture = SKTexture(imageNamed:"camera")
-				self.cameraButton.isHidden = false
+				if (recorder.isCameraEnabled) { // if the user declines allowing front camera use
+					self.cameraButton.isHidden = false
+				}
 			}
 		} else {
 			recorder.stopRecording(handler: { (previewController, error) in
