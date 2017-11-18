@@ -49,7 +49,7 @@ struct Strategist {
   
   // 3
   var bestCoordinate: CGPoint? {
-    if let move = strategist.bestMove(for: board.currentPlayer) as? Move {
+    if let move = strategist.bestMoveForActivePlayer() as? Move {
       return move.coordinate
     }
     

@@ -31,8 +31,8 @@ import GameplayKit
 class Move: NSObject, GKGameModelUpdate {
   
   enum Score: Int {
-    case none
-    case win
+		case none = 0
+    case win = 10
   }
   
   var value: Int = 0

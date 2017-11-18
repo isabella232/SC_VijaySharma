@@ -144,6 +144,7 @@ extension Board: GKGameModel {
   func setGameModel(_ gameModel: GKGameModel) {
     if let board = gameModel as? Board {
       values = board.values
+			currentPlayer = board.currentPlayer
     }
   }
   
@@ -158,6 +159,14 @@ extension Board: GKGameModel {
       return false
     }
   }
+	
+	func isLoss(for player: GKGameModelPlayer) -> Bool {
+		guard let player = player as? Player else {
+			return false
+		}
+		
+		return isWin(for:player.opponent)
+	}
   
   func gameModelUpdates(for player: GKGameModelPlayer) -> [GKGameModelUpdate]? {
     // 1
@@ -201,7 +210,7 @@ extension Board: GKGameModel {
     
     if isWin(for: player) {
       return Move.Score.win.rawValue
-    } else {
+		} else {
       return Move.Score.none.rawValue
     }
   }
