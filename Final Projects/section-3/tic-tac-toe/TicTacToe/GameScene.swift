@@ -304,7 +304,7 @@ class GameScene: SKScene {
 				}
 			}
 		} else {
-			recorder.stopRecording(handler: { (previewController, error) in
+			recorder.stopRecording { (previewController, error) in
 				guard error == nil else {
 					print("Failed to stop recording")
 					return
@@ -319,7 +319,7 @@ class GameScene: SKScene {
 				self.recordButton.texture = SKTexture(imageNamed:"record")
 				self.cameraButton.texture = SKTexture(imageNamed:"camera")
 				self.cameraButton.isHidden = true
-			})
+			}
 		}
 	}
 	

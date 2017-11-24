@@ -31,41 +31,41 @@ import GameplayKit
 import ReplayKit
 
 class GameScene: SKScene {
-  
+
   // MARK: - Properties
-  
+
   var boardNode: SKSpriteNode!
   var informationLabel: SKLabelNode!
 	var recordButton: SKSpriteNode!
   var gamePieceNodes = [SKNode]()
 	weak var viewController: UIViewController!
-	
+
 	var cameraButton: SKSpriteNode!
 	var cameraView: UIView?
 	var cameraFrame: CGRect!
-	
+
   var board = Board()
   var strategist: Strategist!
 
   // MARK: - Scene Loading
-  
+
   override func didMove(to view: SKView) {
     super.didMove(to: view)
-    
+
     anchorPoint = CGPoint(x: 0.5, y: 0.5)
-    
+
     let backgroundNode = SKSpriteNode(imageNamed: "wood-bg")
     addChild(backgroundNode)
-    
+
     let boardWidth = view.frame.width - 24
     let borderHeight = ((view.frame.height - boardWidth) / 2) - 24
-    
+
     boardNode = SKSpriteNode(
       texture: SKTexture(imageNamed: "board"),
       size: CGSize(width: boardWidth, height: boardWidth)
     )
     addChild(boardNode)
-    
+
     let headerNode = SKSpriteNode(
       color: UIColor(red: 46/255, green: 46/255, blue: 46/255, alpha: 1),
       size: CGSize(width: view.frame.width, height: borderHeight)
@@ -73,32 +73,32 @@ class GameScene: SKScene {
     headerNode.alpha = 0.65
     headerNode.position.y = (view.frame.height / 2) - (borderHeight / 2)
     addChild(headerNode)
-    
+
     informationLabel = SKLabelNode(fontNamed: "HandDrawnShapes")
     informationLabel.fontSize = UIDevice.current.userInterfaceIdiom == .pad ? 63 : 40
     informationLabel.fontColor = .white
     informationLabel.position = headerNode.position
     informationLabel.verticalAlignmentMode = .center
     addChild(informationLabel)
-		
+
 		recordButton = SKSpriteNode(imageNamed: "record")
 		recordButton.position = CGPoint(x: (-boardWidth / 2.0) + 16, y: -(view.frame.height / 2) + 28)
 		addChild(recordButton)
-		
+
 		cameraButton = SKSpriteNode(imageNamed: "camera")
 		cameraButton.position = CGPoint(x: (-boardWidth / 2.0) + 64, y: -(view.frame.height / 2) + 26)
 		cameraButton.isHidden = true
 		addChild(cameraButton)
-		
+
 		cameraFrame = CGRect(x: view.frame.width - 112, y: view.frame.height - 132, width: 100.0, height: 120.0)
     strategist = Strategist(board: board)
 
     resetGame()
     updateGame()
   }
-  
+
   // MARK: - Game Logic
-  
+
   fileprivate func resetGame() {
     let actions = [
       SKAction.scale(to: 0, duration: 0.25),
@@ -110,60 +110,60 @@ class GameScene: SKScene {
       node.run(SKAction.sequence(actions))
     }
     gamePieceNodes.removeAll()
-    
+
     board = Board()
     strategist.board = board
 
   }
-  
+
   fileprivate func updateGame() {
     var gameOverTitle: String? = nil
-    
+
     if let winner = board.winningPlayer, winner == board.currentPlayer {
       gameOverTitle = "\(winner.name) Wins!"
     } else if board.isFull {
       gameOverTitle = "Draw"
     }
-    
+
     if gameOverTitle != nil {
       let alert = UIAlertController(title: gameOverTitle, message: nil, preferredStyle: .alert)
       let alertAction = UIAlertAction(title: "Play Again", style: .default) { _ in
         self.resetGame()
         self.updateGame()
       }
-      
+
       alert.addAction(alertAction)
       view?.window?.rootViewController?.present(alert, animated: true)
-      
+
       return
     }
-    
+
     board.currentPlayer = board.currentPlayer.opponent
     informationLabel.text = "\(board.currentPlayer.name)'s Turn"
-    
+
     if board.currentPlayer.value == .brain {
       processAIMove()
     }
   }
-  
+
   fileprivate func updateBoard(with x: Int, y: Int) {
     guard board[x, y] == .empty else { return }
-    
+
     board[x, y] = board.currentPlayer.value
     let sizeValue = boardNode.size.width / 3 - 20
     let spriteSize = CGSize(
       width: sizeValue,
       height: sizeValue
     )
-    
+
     var nodeImageName: String
-    
+
     if board.currentPlayer.value == .zombie {
       nodeImageName = "zombie-head"
     } else {
       nodeImageName = "brain"
     }
-    
+
     let pieceNode = SKSpriteNode(imageNamed: nodeImageName)
     pieceNode.size = CGSize(
       width: spriteSize.width / 2,
@@ -171,21 +171,21 @@ class GameScene: SKScene {
     )
     pieceNode.position = position(for: CGPoint(x: x, y: y))
     addChild(pieceNode)
-    
+
     gamePieceNodes.append(pieceNode)
-    
+
     pieceNode.run(SKAction.scale(by: 2, duration: 0.25))
-    
+
     updateGame()
   }
-  
+
   fileprivate func position(for boardCoordinate: CGPoint) -> CGPoint {
     let boardWidth = boardNode.size.width
     let halfThirdOfBoard = (boardWidth / 3) / 2
-    
+
     var xPosition: CGFloat = 0
     var yPosition: CGFloat = 0
-    
+
     if boardCoordinate.x == 0 {
       xPosition = -((boardWidth / 2) - halfThirdOfBoard)
     } else if boardCoordinate.x == 1 {
@@ -193,7 +193,7 @@ class GameScene: SKScene {
     } else if boardCoordinate.x == 2 {
       xPosition = (boardWidth / 2) - halfThirdOfBoard
     }
-    
+
     if boardCoordinate.y == 0 {
       yPosition = (boardWidth / 2) - halfThirdOfBoard
     } else if boardCoordinate.y == 1 {
@@ -201,11 +201,11 @@ class GameScene: SKScene {
     } else if boardCoordinate.y == 2 {
       yPosition = -((boardWidth / 2) - halfThirdOfBoard)
     }
-    
+
     return CGPoint(x: xPosition, y: yPosition + boardNode.position.y)
   }
-  
-  
+
+
   fileprivate func processAIMove() {
     // 1
     DispatchQueue.global().async { [unowned self] in
@@ -216,7 +216,7 @@ class GameScene: SKScene {
       }
       // 3
       let delta = CFAbsoluteTimeGetCurrent() - strategistTime
-      
+
       let aiTimeCeiling = 0.75
       // 4
       let delay = max(delta, aiTimeCeiling)
@@ -226,15 +226,15 @@ class GameScene: SKScene {
       }
     }
   }
-  
+
   // MARK: - Touches
-  
+
   fileprivate func processTouchOnBoard(touch: UITouch) {
     let locationInBoard = touch.location(in: boardNode)
     let halfThirdOfBoard = (boardNode.size.width / 3) / 2
-    
+
     var boardCoordinate: CGPoint = .zero
-    
+
     if locationInBoard.x > halfThirdOfBoard {
       boardCoordinate.x = 2
     } else if locationInBoard.x < -halfThirdOfBoard {
@@ -242,7 +242,7 @@ class GameScene: SKScene {
     } else {
       boardCoordinate.x = 1
     }
-    
+
     if locationInBoard.y > halfThirdOfBoard {
       boardCoordinate.y = 0
     } else if locationInBoard.y < -halfThirdOfBoard {
@@ -250,16 +250,16 @@ class GameScene: SKScene {
     } else {
       boardCoordinate.y = 1
     }
-    
+
     updateBoard(with: Int(boardCoordinate.x), y: Int(boardCoordinate.y))
   }
-    
+
   fileprivate func handleTouchEnd(_ touches: Set<UITouch>, with event: UIEvent?) {
-    
+
     guard board.currentPlayer.value == .zombie else {
       return
     }
-    
+
     for touch in touches {
       for node in nodes(at: touch.location(in: self)) {
         if node == boardNode {
@@ -272,31 +272,30 @@ class GameScene: SKScene {
       }
     }
   }
-  
+
   override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
     super.touchesEnded(touches, with: event)
-    
+
     handleTouchEnd(touches, with: event)
   }
-  
+
   override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
     super.touchesCancelled(touches, with: event)
-    
+
     handleTouchEnd(touches, with: event)
   }
-	
+
 	// MARK: - ReplayKit
 
 	fileprivate func processTouchRecord() {
 		let recorder = RPScreenRecorder.shared()
 		if !recorder.isRecording {
-			recorder.isCameraEnabled = true
 			recorder.startRecording { (error) in
 				guard error == nil else {
 					print("Failed to start recording")
 					return
 				}
-				
+
 				self.recordButton.texture = SKTexture(imageNamed:"stop")
 			}
 		} else {
@@ -305,15 +304,15 @@ class GameScene: SKScene {
 					print("Failed to stop recording")
 					return
 				}
-				
+
 				previewController?.previewControllerDelegate = self
 				self.viewController.present(previewController!, animated: true)
-				
+
 				self.recordButton.texture = SKTexture(imageNamed:"record")
 			})
 		}
 	}
-	
+
 	fileprivate func processTouchCamera() {
 		// TODO: Handle camera button
 	}
