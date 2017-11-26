@@ -4,7 +4,7 @@ Hey what's up everybody, this is Ray. In today's screencast, I'm going to introd
 
 ReplayKit records the screen and audio of your application. You can also add your own voice commentary or add your expressions using the the front facing camera to make your recordings personal or provide extra context. It allows your users to play back, scrub and trim their recordings and finally share the recordings to their favorite social networks and video streaming sites. ReplayKit generates high-quality HD recordings that will look great on TV's, websites and mobile devices.
 
-Although available in iOS 9, ReplayKit has added some great APIs in both iOS 10 and 11, allowing developers to live broadcast their recordings to service providers like Twitch. Uncharacteristically, ReplayKit doesn't work in the iOS Simulator, so everything you'll see here will be shown on device.
+Although available in iOS 9, ReplayKit has added some great APIs in both iOS 10 and 11, allowing developers to live broadcast their recordings to service providers like Twitch or YouTube. Uncharacteristically, ReplayKit doesn't work in the iOS Simulator, so everything you'll see here will be shown on device.
 
 In this screencast, we'll be adding support for ReplayKit in the zombie/brain tic tac toe thriller, originally featured in the [GameplayKit: Artificial Intelligence](https://www.raywenderlich.com/146407/gameplaykit-tutorial-artificial-intelligence) tutorial. Thanks to Ryan Ackermann who originally wrote the tutorial.
 
@@ -14,13 +14,15 @@ Adding ReplayKit to your app is super easy, so let's dive in.
 
 ## Demo 1
 
-In this demo, we're using an app written using SpriteKit, but ReplayKit can be used with apps written purely in UIKit. We'll start by importing ReplayKit into our project by adding the following header to our Scene.
+In this demo, we're using an app written using SpriteKit, but ReplayKit can be used with apps written purely in UIKit.
+
+You'll start by importing ReplayKit into our project by adding the following header to your Scene.
 
 ```
 import ReplayKit
 ```
 
-We've already added a button to start a recording, and the callback to handle the touch event. In order to start recording using ReplayKit, in the body of the method, we'll first get a handle to the shared `RPScreenRecorder` object. We'll call `startRecording` passing in a callback. In the callback we'll update the state of the record button so that users know they're currently recording themselves. If there's an error, we'll just print that to the console.
+We've already added a button to start a recording, and a method to handle the touch event. In order to start recording using ReplayKit, in the body of the method, we'll first get a handle to the shared `RPScreenRecorder` object. We'll call `startRecording` passing in a callback. In the callback we'll update the state of the record button so that users know they're currently recording themselves. If there's an error, we'll just print that to the console.
 
 ```
 let recorder = RPScreenRecorder.shared()
@@ -46,9 +48,9 @@ Next let's give your users the ability to stop the recording and optionally edit
 
 ## Demo 2
 
-To stop a recording, you have to call the plainly named method `stopRecording`. We can use `RPScreenRecorder`'s' `isRecording` to determine if we're currently recording. This is slight different from `startRecording`, in that it also returns in the callback, an instance of `RPPreviewViewController`.
+To stop a recording, you have to call the plainly named method `stopRecording`. This is slight different from `startRecording`, in that it returns in the callback, an instance of `RPPreviewViewController`. In the same method where you call `startRecording`, you can use `RPScreenRecorder`'s' `isRecording` property to determine if we're currently recording, and stop the recording accordingly.
 
-This `RPPreviewViewController` allows your users to scrub, edit and share their video recordings to the world. They can also save the recording to their photos, or discard it entirely.
+The `RPPreviewViewController` allows your users to scrub, edit and share their video recordings to the world. They can also save the recording to their photos, or discard it entirely.
 
 If we want to know when the user is done interacting with the `RPPreviewViewController`, you'll have to conform the `RPPreviewViewControllerDelegate` protocol.
 
@@ -88,7 +90,7 @@ extension GameScene: RPPreviewViewControllerDelegate {
 }
 ```
 
-Build and run, and tap the record button. You'll first get a dialog asking if you want to give the app permission to record. This User consent prompt will be displayed every time you call `startRecording`, but once the user has accepted it, it will not be shown again for another eight minutes. Why 8? Your guess is as good as mine! In any case, your users now have control over what they'd like included in their recordings. When you're done, tap the stop button, and you should see a new view controller gracefully slide into view. Feel free to playback your gameplay and share your wins with all your friends.
+Build and run, and tap the record button. You'll first get a dialog asking if you want to give the app permission to record. This User consent prompt will be displayed every time you call `startRecording`, but once the user has accepted it, it will not be shown again for another eight minutes. Why 8 minutes? Your guess is as good as mine! In any case, your users now have control over what they'd like to include in their recordings. When you're done, tap the stop button, and you should see a new view controller gracefully slide into view. Feel free to playback your gameplay and share your wins with all your friends and family.
 
 ## Interlude 2
 
@@ -102,20 +104,20 @@ Although recording just the screen can be useful in its own way, it can be fun t
 
 ## Demo 3
 
-Since you'll need access to the camera for this part of the demo, you'll need to add an entry in the `Info.plist` with key `NSCameraUsageDescription`, and any text description you want to show your users
+Since you'll need access to the camera for this part of the demo, you'll need to add an entry in the `Info.plist` with the `NSCameraUsageDescription` key, and any text description you want to show your users as its value.
 
 ```
 <key>NSCameraUsageDescription</key>
 <string>This app would like access the front facing camera while recording gameplay.</string>
 ```
 
-Next you'll have to ask for permission from the user to use the camera. You'll have to do that just before you call `startRecording`, which makes the text you added to the `Info.plist` all the more important. So just before `startRecording`, add the line `recorder.isCameraEnabled = true`
+Next you'll have to ask for permission from the user to use the camera. You'll have to do that just before you call `startRecording`, which makes the text you added to the `Info.plist` all the more important. Just before `startRecording`, add the line `recorder.isCameraEnabled = true`
 
 ```
 recorder.isCameraEnabled = true
 ```
 
-Inside the callback `startRecording` you can use this property to check if you have the permission to use the camera. You'll use this property to hide or show the camera button in case your user decides they don't want to show their face during this recording. You'll also use this opportunity to update the state of your camera button so it's obvious what the button will do.
+Inside the callback `startRecording`, you can use this same property to check if your app has permission to use the camera. You'll use this property to hide or show the camera button, removing the ability entirely, in the event your user doesn't want your app to have access to the camera. You'll also use this opportunity to update the state of your camera button so it's obvious what the button can do.
 
 ```
 self.cameraButton.texture = SKTexture(imageNamed:"camera")
