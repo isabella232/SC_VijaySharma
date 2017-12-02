@@ -22,17 +22,27 @@ You'll start by importing ReplayKit into our project by adding the following hea
 import ReplayKit
 ```
 
-We've already added a button to start a recording, and a method to handle the touch event. In order to start recording using ReplayKit, in the body of the method, we'll first get a handle to the shared `RPScreenRecorder` object. We'll call `startRecording` passing in a callback. In the callback we'll update the state of the record button so that users know they're currently recording themselves. If there's an error, we'll just print that to the console.
+We've already added a button to start a recording, and a method to handle the touch event.   
 
 ```
-let recorder = RPScreenRecorder.shared()
-recorder.startRecording { (error) in
-  guard error == nil else {
-    print("Failed to start recording")
-    return
-  }
+fileprivate func processTouchRecord() {
+  In order to start recording using ReplayKit, in the body of the method, we'll first get a handle to the shared `RPScreenRecorder` object.
 
-  self.recordButton.texture = SKTexture(imageNamed:"stop")
+  let recorder = RPScreenRecorder.shared()
+
+  We'll call `startRecording` passing in a callback.
+
+  recorder.startRecording { (error) in
+
+    In the callback we'll update the state of the record button so that users know they're currently recording themselves. If there's an error, we'll just print that to the console.
+
+    guard error == nil else {
+      print("Failed to start recording")
+      return
+    }
+
+    self.recordButton.texture = SKTexture(imageNamed:"stop")
+  }
 }
 ```
 
@@ -48,42 +58,43 @@ Next let's give your users the ability to stop the recording and optionally edit
 
 ## Demo 2
 
-To stop a recording, you have to call the plainly named method `stopRecording`. This is slight different from `startRecording`, in that it returns in the callback, an instance of `RPPreviewViewController`. In the same method where you call `startRecording`, you can use `RPScreenRecorder`'s' `isRecording` property to determine if we're currently recording, and stop the recording accordingly.
+```
+In the same method where you call `startRecording`, you can use `RPScreenRecorder`'s' `isRecording` property to determine if we're currently recording, and stop the recording accordingly.
 
-The `RPPreviewViewController` allows your users to scrub, edit and share their video recordings to the world. They can also save the recording to their photos, or discard it entirely.
-
-If we want to know when the user is done interacting with the `RPPreviewViewController`, you'll have to conform the `RPPreviewViewControllerDelegate` protocol.
+if !recorder.isRecording {
+  recorder.startRecording { ... }
+} else {
+  recorder.stopRecording { ... }
+}
+```
 
 ```
-let recorder = RPScreenRecorder.shared()
-if !recorder.isRecording {
-  recorder.startRecording { (error) in
-    guard error == nil else {
-      print("Failed to start recording")
-      return
-    }
+  To stop a recording, you have to call the plainly named method `stopRecording`. This is slight different from `startRecording`, in that it returns in the callback, an instance of `RPPreviewViewController`.
 
-    self.recordButton.texture = SKTexture(imageNamed:"stop")
-  }
-} else {
   recorder.stopRecording(handler: { (previewController, error) in
     guard error == nil else {
       print("Failed to stop recording")
       return
     }
 
+    The `RPPreviewViewController` allows your users to scrub, edit and share their video recordings to the world. They can also save the recording to their photos, or discard it entirely.
+
     previewController?.previewControllerDelegate = self
     self.viewController.present(previewController!, animated: true)
 
+
     self.recordButton.texture = SKTexture(imageNamed:"record")
   })
-}
-```
-
-Here, we'll implement the `previewControllerDidFinish` method, and simply dismiss the controller, being sure to animate it, because... well, animations are fun!
 
 ```
+
+```
+If we want to know when the user is done interacting with the `RPPreviewViewController`, you'll have to conform the `RPPreviewViewControllerDelegate` protocol.
+
 extension GameScene: RPPreviewViewControllerDelegate {
+
+  Here, we'll implement the `previewControllerDidFinish` method, and simply dismiss the controller, being sure to animate it, because... well, animations are fun!
+
 	func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
 		viewController.dismiss(animated: true)
 	}
@@ -104,57 +115,87 @@ Although recording just the screen can be useful in its own way, it can be fun t
 
 ## Demo 3
 
+```
 Since you'll need access to the camera for this part of the demo, you'll need to add an entry in the `Info.plist` with the `NSCameraUsageDescription` key, and any text description you want to show your users as its value.
 
-```
 <key>NSCameraUsageDescription</key>
 <string>This app would like access the front facing camera while recording gameplay.</string>
 ```
 
-Next you'll have to ask for permission from the user to use the camera. You'll have to do that just before you call `startRecording`, which makes the text you added to the `Info.plist` all the more important. Just before `startRecording`, add the line `recorder.isCameraEnabled = true`
-
 ```
+Next you'll have to ask for permission from the user to use the camera. You'll have to do that just before you call `startRecording`, which makes the text you added to the `Info.plist` all the more important. Just before `startRecording`, add the line
+
 recorder.isCameraEnabled = true
 ```
 
-Inside the callback `startRecording`, you can use this same property to check if your app has permission to use the camera. You'll use this property to hide or show the camera button, removing the ability entirely, in the event your user doesn't want your app to have access to the camera. You'll also use this opportunity to update the state of your camera button so it's obvious what the button can do.
-
 ```
-self.cameraButton.texture = SKTexture(imageNamed:"camera")
-if (recorder.isCameraEnabled) { // if the user declines camera use
+Inside the callback `startRecording`, you can use this same property to check if your app has permission to use the camera.
+
+if (recorder.isCameraEnabled) {
+
+  You'll use this property to hide or show the camera button, removing the ability entirely, in the event your user doesn't want your app to have access to the camera.
+
   self.cameraButton.isHidden = false
 }
+
+You'll also use this opportunity to update the state of your camera button so it's obvious what the button can do.
+
+self.cameraButton.texture = SKTexture(imageNamed:"camera")
 ```
 
-Next, you'll handle touches on this button to hide or show the camera. `RPScreenRecorder` provides a convenient `recorder.cameraPreviewView` property which returns a `UIView` instance of the front facing camera. You can add this view directly into your view hierarchy. You'll also hold onto an instance of the view so you can remove it from the hierarchy so the user can toggle between hiding and showing their face in the recording.
-
 ```
+Next, you'll handle touches on this button to hide or show the camera.
+
 fileprivate func processTouchCamera() {
   let recorder = RPScreenRecorder.shared()
+
+  You'll safely ignore any button presses if you're already recording
+
   guard recorder.isRecording else {
     return
   }
 
+  `RPScreenRecorder` provides a convenient `recorder.cameraPreviewView` property which returns a `UIView` instance of the front facing camera which you'll keep a reference to.
+
   if let cameraView = self.cameraView {
+
+    If you're currently holding an instance of the view, you can assume that the user wants to remove the camera from the recording, and you'll release a reference to the view.
+
     cameraView.removeFromSuperview()
-    self.cameraButton.texture = SKTexture(imageNamed:"camera")
     self.cameraView =  nil
+
+    You'll also update the state of the camera button so it's clear what the user will expect the next time they tap it.
+
+    self.cameraButton.texture = SKTexture(imageNamed:"camera")
   } else {
+     You can add this view directly into your view hierarchy. You'll also hold onto an instance of the view so you can remove it from the hierarchy so the user can toggle between hiding and showing their face in the recording.
+
+   If you're currently not holding an instance of the camera view, you can get a reference from `RPScreenRecorder`.
     self.cameraView = recorder.cameraPreviewView
     if let cameraView = self.cameraView {
+
+      You'll size the view to something that will reasonably fit with your app
       cameraView.frame = cameraFrame
+
+      And you'll add the view into the view hierarchy
+
       self.viewController.view.addSubview(cameraView)
+
+      You'll also update the state of the camera button so it'll be obvious to your users that tapping it again will remove the camera from the recording
+
       self.cameraButton.texture = SKTexture(imageNamed:"camera_stop")
     }
   }
 }
 ```
 
+```
 Be sure to also remove the view when the user stops the recording.
 
-```
 self.cameraView?.removeFromSuperview()
 self.cameraView = nil
+
+And finally update the state of the camera button so it's back to its initial state
 
 self.cameraButton.texture = SKTexture(imageNamed:"camera")
 self.cameraButton.isHidden = true
