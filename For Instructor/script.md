@@ -36,9 +36,9 @@ recorder.startRecording { (error) in
 }
 ```
 
-## Interlude 1
-
 And that's all it takes to record your app using ReplayKit. Now you might be tempted to build and run, but before you do that, let's quickly see what's going on under the hood
+
+## Interlude 1
 
 [slide 01]
 
