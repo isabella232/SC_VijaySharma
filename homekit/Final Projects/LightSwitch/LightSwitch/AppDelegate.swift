@@ -31,15 +31,14 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-	var window: UIWindow?
+  var window: UIWindow?
 
-	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-		
-		let navigation = window!.rootViewController! as! UINavigationController
-		let target = navigation.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-		navigation.pushViewController(target, animated: false)
-		return true
-	}
+  func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
+    let navigation = window!.rootViewController! as! UINavigationController
+    let target = navigation.storyboard?.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+    navigation.pushViewController(target, animated: false)
+    return true
+  }
 }
 
