@@ -33,11 +33,11 @@ class BaseCollectionViewController : UICollectionViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-		self.navigationController?.navigationBar.shadowImage = UIImage()
-		self.navigationController?.navigationBar.isTranslucent = true
-		self.navigationController?.navigationBar.tintColor = UIColor.white
-		self.navigationController?.navigationBar.barStyle = UIBarStyle.black
+		navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+		navigationController?.navigationBar.shadowImage = UIImage()
+		navigationController?.navigationBar.isTranslucent = true
+		navigationController?.navigationBar.tintColor = UIColor.white
+		navigationController?.navigationBar.barStyle = UIBarStyle.black
 		
 		let width = view.frame.size.width / 3
 		let height = width + 21

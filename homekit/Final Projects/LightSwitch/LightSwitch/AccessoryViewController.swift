@@ -41,10 +41,10 @@ class AccessoryViewController : BaseCollectionViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		title = "\(self.home?.name ?? "") Accessories"
+		title = "\(home?.name ?? "") Accessories"
 		navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(discoverAccessories(sender:)))
 		
-		self.loadAccessories();
+		loadAccessories();
 	}
 	
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -52,7 +52,7 @@ class AccessoryViewController : BaseCollectionViewController {
 	}
 	
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let accessory = self.accessories[indexPath.row]
+		let accessory = accessories[indexPath.row]
 		
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "itemCell", for: indexPath)
 		if let label = cell.viewWithTag(101) as! UILabel? {
@@ -60,7 +60,7 @@ class AccessoryViewController : BaseCollectionViewController {
 		}
 		
 		if let image = cell.viewWithTag(100) as! UIImageView? {
-			let state = self.getLightbulbState(accessory)
+			let state = getLightbulbState(accessory)
 			image.image = UIImage(named: state)
 		}
 		
@@ -81,12 +81,12 @@ class AccessoryViewController : BaseCollectionViewController {
 			if error != nil {
 				print("Something went wrong when attempting to update the service characteristic.")
 			}
-			self.collectionView?.reloadData()
+			collectionView.reloadData()
 		})
 	}
 	
 	private func loadAccessories() {
-		if let homeAccessories = self.home?.accessories {
+		if let homeAccessories = home?.accessories {
 			for accessory in homeAccessories {
 				if let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool) {
 					accessories.append(accessory)
@@ -99,7 +99,7 @@ class AccessoryViewController : BaseCollectionViewController {
 				}
 			}
 			
-			self.collectionView?.reloadData()
+			collectionView?.reloadData()
 		}
 	}
 	
@@ -131,21 +131,21 @@ class AccessoryViewController : BaseCollectionViewController {
 		if (discoveredAccessories.count == 0) {
 			let alert = UIAlertController(title: "No Accessories Found", message: "No Accessories were found. Make sure your accessory is nearby and on the same network.", preferredStyle: UIAlertControllerStyle.alert)
 			alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: nil))
-			self.present(alert, animated: true, completion: nil)
+			present(alert, animated: true, completion: nil)
 		} else {
-			let homeName = self.home?.name
+			let homeName = home?.name
 			let alert = UIAlertController(title: "Accessories Found", message: "A total of \(discoveredAccessories.count) were found. They will all be added to your home '\(homeName ?? "")'.", preferredStyle: UIAlertControllerStyle.alert)
 			alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.default, handler: nil))
 			alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.default) { action in
 				self.add(accessories:self.discoveredAccessories)
 			})
-			self.present(alert, animated: true, completion: nil)
+			present(alert, animated: true, completion: nil)
 		}
 	}
 	
 	private func add(accessories: [HMAccessory]) {
 		for accessory in accessories {
-			self.home?.addAccessory(accessory) {error in
+			home?.addAccessory(accessory) {error in
 				if let error = error {
 					print("Failed to add accessory to Home. \(error.localizedDescription)")
 				} else {
@@ -158,19 +158,19 @@ class AccessoryViewController : BaseCollectionViewController {
 
 extension AccessoryViewController: HMAccessoryDelegate {
 	func accessory(_ accessory: HMAccessory, service: HMService, didUpdateValueFor characteristic: HMCharacteristic) {
-		self.collectionView?.reloadData()
+		collectionView?.reloadData()
 	}
 }
 
 extension AccessoryViewController: HMAccessoryBrowserDelegate {
 	func accessoryBrowser(_ browser: HMAccessoryBrowser, didFindNewAccessory accessory: HMAccessory) {
-		self.discoveredAccessories.append(accessory)
+		discoveredAccessories.append(accessory)
 	}
 }
 
 extension HMAccessory {
 	func find(serviceType: String, characteristicType: String) -> HMCharacteristic? {
-		for service in self.services {
+		for service in services {
 			if serviceType == service.serviceType {
 				for item in service.characteristics {
 					let characteristic = item as HMCharacteristic

@@ -43,9 +43,9 @@ class HomeViewController: BaseCollectionViewController {
 		super.viewDidLoad()
 		
 		title = "Homes"
-		self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(newHome(sender:)))
-		self.addHomes(self.homeManager.homes)
-		self.collectionView?.reloadData()
+		navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(newHome(sender:)))
+		addHomes(homeManager.homes)
+		collectionView?.reloadData()
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -63,13 +63,13 @@ class HomeViewController: BaseCollectionViewController {
 	override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		collectionView.deselectItem(at: indexPath, animated: true)
 		
-		let target = self.navigationController?.storyboard?.instantiateViewController(withIdentifier: "AccessoryViewController") as! AccessoryViewController
+		let target = navigationController?.storyboard?.instantiateViewController(withIdentifier: "AccessoryViewController") as! AccessoryViewController
 		target.home = homes[indexPath.row]
-		self.navigationController?.pushViewController(target, animated: true)
+		navigationController?.pushViewController(target, animated: true)
 	}
 	
 	@objc func newHome(sender: UIBarButtonItem) {
-		self.showInputDialog { (homeName, roomName) in
+		showInputDialog { (homeName, roomName) in
 			self.homeManager.addHome(withName: homeName, completionHandler: { (home, error) in
 				if let error = error {
 					print("Failed to add home: \(error.localizedDescription)")
@@ -111,7 +111,7 @@ class HomeViewController: BaseCollectionViewController {
 		alertController.addAction(confirmAction)
 		alertController.addAction(cancelAction)
 		
-		self.present(alertController, animated: true, completion: nil)
+		present(alertController, animated: true, completion: nil)
 	}
 	
 	func addHomes(_ homes:[HMHome]) {
@@ -120,13 +120,13 @@ class HomeViewController: BaseCollectionViewController {
 			self.homes.append(home)
 		}
 		
-		self.collectionView?.reloadData()
+		collectionView?.reloadData()
 	}
 }
 
 extension HomeViewController : HMHomeManagerDelegate {
 	func homeManagerDidUpdateHomes(_ manager: HMHomeManager) {
-		self.addHomes(manager.homes)
+		addHomes(manager.homes)
 	}
 }
 
