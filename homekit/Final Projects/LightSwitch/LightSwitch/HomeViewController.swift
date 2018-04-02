@@ -88,7 +88,7 @@ class HomeViewController: BaseCollectionViewController {
 		}
 	}
 	
-	func showInputDialog(_ handler: @escaping ((String, String) -> Swift.Void)) {
+	func showInputDialog(_ handler: @escaping ((String, String) -> Void)) {
 		let alertController = UIAlertController(title: "Create new Home?", message: "Enter the name of your new home and give it a Room", preferredStyle: .alert)
 		
 		let confirmAction = UIAlertAction(title: "Create", style: .default) { (_) in

@@ -86,21 +86,23 @@ class AccessoryViewController : BaseCollectionViewController {
 	}
 	
 	private func loadAccessories() {
-		if let homeAccessories = home?.accessories {
-			for accessory in homeAccessories {
-				if let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool) {
-					accessories.append(accessory)
-					accessory.delegate = self
-					characteristic.enableNotification(true, completionHandler: { (error) -> Void in
-						if error != nil {
-							print("Something went wrong when enabling notification for a chracteristic.")
-						}
-					})
-				}
-			}
-			
-			collectionView?.reloadData()
+		guard let homeAccessories = home?.accessories else {
+			return
 		}
+		
+		for accessory in homeAccessories {
+			if let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool) {
+				accessories.append(accessory)
+				accessory.delegate = self
+				characteristic.enableNotification(true, completionHandler: { (error) -> Void in
+					if error != nil {
+						print("Something went wrong when enabling notification for a chracteristic.")
+					}
+				})
+			}
+		}
+		
+		collectionView?.reloadData()
 	}
 	
 	private func getLightbulbState(_ accessory: HMAccessory) -> String {
@@ -170,20 +172,10 @@ extension AccessoryViewController: HMAccessoryBrowserDelegate {
 
 extension HMAccessory {
 	func find(serviceType: String, characteristicType: String) -> HMCharacteristic? {
-		for service in services {
-			if serviceType == service.serviceType {
-				for item in service.characteristics {
-					let characteristic = item as HMCharacteristic
-					if let metadata = characteristic.metadata as HMCharacteristicMetadata? {
-						if metadata.format == characteristicType {
-							return characteristic
-						}
-					}
-				}
-			}
-		}
-		
-		return nil
+		return services.lazy
+			.filter { $0.serviceType == serviceType }
+			.flatMap { $0.characteristics }
+			.first {$0.metadata?.format == characteristicType }
 	}
 }
 
