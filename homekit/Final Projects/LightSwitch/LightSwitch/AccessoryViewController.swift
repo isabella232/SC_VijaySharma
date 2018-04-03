@@ -29,7 +29,13 @@
 import UIKit
 import HomeKit
 
-class AccessoryViewController : BaseCollectionViewController {
+class AccessoryViewController: BaseCollectionViewController {
+
+  enum LightbulbState: String {
+    case on
+    case off
+  }
+
   let activityIndicator = UIActivityIndicatorView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
   var accessories = [HMAccessory]()
   var home: HMHome? = nil
@@ -38,24 +44,19 @@ class AccessoryViewController : BaseCollectionViewController {
   let browser = HMAccessoryBrowser()
   var discoveredAccessories = [HMAccessory]()
 
-  enum LightbulbState: String {
-    case on
-    case off
-  }
-	
   override func viewDidLoad() {
     super.viewDidLoad()
 
     title = "\(home?.name ?? "") Accessories"
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(discoverAccessories(sender:)))
 
-    loadAccessories();
+    loadAccessories()
   }
 
   override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
     return accessories.count
   }
-	
+
   override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let accessory = accessories[indexPath.row]
 
@@ -64,25 +65,19 @@ class AccessoryViewController : BaseCollectionViewController {
       label.text = accessory.name
     }
 
-    if let image = cell.viewWithTag(100) as! UIImageView? {
+    if let imageView = cell.viewWithTag(100) as! UIImageView? {
       let state = getLightbulbState(accessory)
-      switch state {
-      case .on:
-        image.image = UIImage(named: "on")
-      case .off:
-        image.image = UIImage(named: "off")
-      }
+      imageView.image = UIImage(named: state.rawValue)
     }
-
     return cell
   }
-	
+
   override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: true)
 
-    let accessory = accessories[indexPath.row];
+    let accessory = accessories[indexPath.row]
 
-    guard let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool) else {
+    guard let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool) else {
       return
     }
 
@@ -94,14 +89,14 @@ class AccessoryViewController : BaseCollectionViewController {
       collectionView.reloadData()
     })
   }
-	
+
   private func loadAccessories() {
     guard let homeAccessories = home?.accessories else {
       return
     }
 
     for accessory in homeAccessories {
-      if let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool) {
+      if let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool) {
         accessories.append(accessory)
         accessory.delegate = self
         characteristic.enableNotification(true, completionHandler: { (error) -> Void in
@@ -114,16 +109,7 @@ class AccessoryViewController : BaseCollectionViewController {
 
     collectionView?.reloadData()
   }
-	
-  private func getLightbulbState(_ accessory: HMAccessory) -> LightbulbState {
-    guard let characteristic = accessory.find(serviceType:HMServiceTypeLightbulb, characteristicType:HMCharacteristicMetadataFormatBool),
-      let value = characteristic.value as? Bool else {
-      return .off
-    }
 
-    return value ? .on : .off
-  }
-	
   @objc func discoverAccessories(sender: UIBarButtonItem) {
     activityIndicator.startAnimating()
     navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityIndicator)
@@ -131,13 +117,13 @@ class AccessoryViewController : BaseCollectionViewController {
     discoveredAccessories.removeAll()
     browser.delegate = self
     browser.startSearchingForNewAccessories()
-    perform(#selector(stopDiscoveringAccessories), with:nil, afterDelay: 10)
+    perform(#selector(stopDiscoveringAccessories), with: nil, afterDelay: 10)
   }
-	
+
   @objc private func stopDiscoveringAccessories() {
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(discoverAccessories(sender:)))
-    if (discoveredAccessories.isEmpty) {
-      let alert = UIAlertController(title: "No Accessories Found", message: "No Accessories were found. Make sure your accessory is nearby and on the same network.", preferredStyle: UIAlertControllerStyle.alert)
+    if discoveredAccessories.isEmpty {
+      let alert = UIAlertController(title: "No Accessories Found", message: "No Accessories were found. Make sure your accessory is nearby and on the same network.", preferredStyle: .alert)
       alert.addAction(UIAlertAction(title: "OK", style: .default))
       present(alert, animated: true)
     } else {
@@ -145,22 +131,31 @@ class AccessoryViewController : BaseCollectionViewController {
       let alert = UIAlertController(title: "Accessories Found", message: "A total of \(discoveredAccessories.count) were found. They will all be added to your home '\(homeName ?? "")'.", preferredStyle: UIAlertControllerStyle.alert)
       alert.addAction(UIAlertAction(title: "Cancel", style: .default))
       alert.addAction(UIAlertAction(title: "OK", style: .default) { action in
-        self.add(accessories:self.discoveredAccessories)
+        self.addAccessories(self.discoveredAccessories)
       })
       present(alert, animated: true)
     }
   }
-	
-  private func add(accessories: [HMAccessory]) {
+
+  private func addAccessories(_ accessories: [HMAccessory]) {
     for accessory in accessories {
-      home?.addAccessory(accessory) {error in
+      home?.addAccessory(accessory) { error in
         if let error = error {
-          print("Failed to add accessory to Home. \(error.localizedDescription)")
+          print("Failed to add accessory to home: \(error.localizedDescription)")
         } else {
-        self.loadAccessories()
+          self.loadAccessories()
         }
       }
     }
+  }
+
+  private func getLightbulbState(_ accessory: HMAccessory) -> LightbulbState {
+    guard let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool),
+      let value = characteristic.value as? Bool else {
+        return .off
+    }
+
+    return value ? .on : .off
   }
 }
 
@@ -179,9 +174,9 @@ extension AccessoryViewController: HMAccessoryBrowserDelegate {
 extension HMAccessory {
   func find(serviceType: String, characteristicType: String) -> HMCharacteristic? {
     return services.lazy
-		.filter { $0.serviceType == serviceType }
-		.flatMap { $0.characteristics }
-		.first {$0.metadata?.format == characteristicType }
+      .filter { $0.serviceType == serviceType }
+      .flatMap { $0.characteristics }
+      .first { $0.metadata?.format == characteristicType }
   }
 }
 
