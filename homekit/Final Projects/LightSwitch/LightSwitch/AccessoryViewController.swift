@@ -30,12 +30,6 @@ import UIKit
 import HomeKit
 
 class AccessoryViewController: BaseCollectionViewController {
-
-  enum LightbulbState: String {
-    case on
-    case off
-  }
-
   let activityIndicator = UIActivityIndicatorView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
   var accessories = [HMAccessory]()
   var home: HMHome? = nil
@@ -60,15 +54,9 @@ class AccessoryViewController: BaseCollectionViewController {
   override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let accessory = accessories[indexPath.row]
 
-    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "itemCell", for: indexPath)
-    if let label = cell.viewWithTag(101) as! UILabel? {
-      label.text = accessory.name
-    }
-
-    if let imageView = cell.viewWithTag(100) as! UIImageView? {
-      let state = getLightbulbState(accessory)
-      imageView.image = UIImage(named: state.rawValue)
-    }
+    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "itemCell", for: indexPath) as! AccessoryCell
+	cell.accessory = accessory
+	
     return cell
   }
 
@@ -147,15 +135,6 @@ class AccessoryViewController: BaseCollectionViewController {
         }
       }
     }
-  }
-
-  private func getLightbulbState(_ accessory: HMAccessory) -> LightbulbState {
-    guard let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool),
-      let value = characteristic.value as? Bool else {
-        return .off
-    }
-
-    return value ? .on : .off
   }
 }
 

@@ -53,10 +53,9 @@ class HomeViewController: BaseCollectionViewController {
   }
   
   override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "itemCell", for: indexPath)
-    if let label = cell.viewWithTag(101) as! UILabel? {
-      label.text = homes[indexPath.row].name
-    }
+    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "itemCell", for: indexPath) as! HomeCell
+    cell.home = homes[indexPath.row]
+	
     return cell
   }
   
