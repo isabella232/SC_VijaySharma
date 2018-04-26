@@ -41,7 +41,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSHomeKitUsageDescription</key>
-	<string>LightSwitch would like to control your home&apos;s light switch</string>
 </dict>
 </plist>

@@ -31,12 +31,13 @@ import HomeKit
 
 class HomeViewController: BaseCollectionViewController {
   var homes = [HMHome]()
-  let homeManager = HMHomeManager()
-  
+	
+  // 1. Add the homeManager
+	
   required init?(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
-    
-    homeManager.delegate = self
+	
+	// 3. Add HomeController as delegate to homeManager
   }
   
   override func viewDidLoad() {
@@ -44,8 +45,10 @@ class HomeViewController: BaseCollectionViewController {
     
     title = "Homes"
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(newHome(sender:)))
-    addHomes(homeManager.homes)
-    collectionView?.reloadData()
+	
+	// 2. Add homes from homeManager
+	
+	collectionView?.reloadData()
   }
   
   override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -69,21 +72,7 @@ class HomeViewController: BaseCollectionViewController {
   
   @objc func newHome(sender: UIBarButtonItem) {
     showInputDialog { (homeName, roomName) in
-      self.homeManager.addHome(withName: homeName, completionHandler: { (home, error) in
-        if let error = error {
-          print("Failed to add home: \(error.localizedDescription)")
-        }
-        if let discoveredHome = home {
-          discoveredHome.addRoom(withName: roomName, completionHandler: { _, error  in
-            if let error = error {
-              print("Failed to add room: \(error.localizedDescription)")
-            } else {
-              self.homes.append(discoveredHome)
-              self.collectionView?.reloadData()
-            }
-          })
-        }
-      })
+		// 5. Add new Home + Room
     }
   }
   
@@ -122,9 +111,5 @@ class HomeViewController: BaseCollectionViewController {
   }
 }
 
-extension HomeViewController: HMHomeManagerDelegate {
-  func homeManagerDidUpdateHomes(_ manager: HMHomeManager) {
-    addHomes(manager.homes)
-  }
-}
+// 4. Implement HMHomeManagerDelegate as extension on HomeController
 

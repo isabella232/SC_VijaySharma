@@ -34,9 +34,7 @@ class AccessoryViewController: BaseCollectionViewController {
   var accessories = [HMAccessory]()
   var home: HMHome? = nil
 
-  // For discovering new accessories
-  let browser = HMAccessoryBrowser()
-  var discoveredAccessories = [HMAccessory]()
+  // 1. For discovering new accessories
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -65,34 +63,12 @@ class AccessoryViewController: BaseCollectionViewController {
 
     let accessory = accessories[indexPath.row]
 
-    guard let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool) else {
-      return
-    }
-
-    let toggleState = (characteristic.value as! Bool) ? false : true
-    characteristic.writeValue(NSNumber(value: toggleState), completionHandler: { (error) -> Void in
-      if error != nil {
-        print("Something went wrong when attempting to update the service characteristic.")
-      }
-      collectionView.reloadData()
-    })
+	// 7. Handle touches which toggle the state of the lightbulb
   }
 
   private func loadAccessories() {
     guard let homeAccessories = home?.accessories else {
       return
-    }
-
-    for accessory in homeAccessories {
-      if let characteristic = accessory.find(serviceType: HMServiceTypeLightbulb, characteristicType: HMCharacteristicMetadataFormatBool) {
-        accessories.append(accessory)
-        accessory.delegate = self
-        characteristic.enableNotification(true, completionHandler: { (error) -> Void in
-          if error != nil {
-            print("Something went wrong when enabling notification for a chracteristic.")
-          }
-        })
-      }
     }
 
     collectionView?.reloadData()
@@ -102,27 +78,12 @@ class AccessoryViewController: BaseCollectionViewController {
     activityIndicator.startAnimating()
     navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityIndicator)
 
-    discoveredAccessories.removeAll()
-    browser.delegate = self
-    browser.startSearchingForNewAccessories()
-    perform(#selector(stopDiscoveringAccessories), with: nil, afterDelay: 10)
+	// 2. Start discovery
   }
 
   @objc private func stopDiscoveringAccessories() {
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(discoverAccessories(sender:)))
-    if discoveredAccessories.isEmpty {
-      let alert = UIAlertController(title: "No Accessories Found", message: "No Accessories were found. Make sure your accessory is nearby and on the same network.", preferredStyle: .alert)
-      alert.addAction(UIAlertAction(title: "OK", style: .default))
-      present(alert, animated: true)
-    } else {
-      let homeName = home?.name
-      let alert = UIAlertController(title: "Accessories Found", message: "A total of \(discoveredAccessories.count) were found. They will all be added to your home '\(homeName ?? "")'.", preferredStyle: UIAlertControllerStyle.alert)
-      alert.addAction(UIAlertAction(title: "Cancel", style: .default))
-      alert.addAction(UIAlertAction(title: "OK", style: .default) { action in
-        self.addAccessories(self.discoveredAccessories)
-      })
-      present(alert, animated: true)
-    }
+	// 4. Stop discovering
   }
 
   private func addAccessories(_ accessories: [HMAccessory]) {
@@ -138,17 +99,9 @@ class AccessoryViewController: BaseCollectionViewController {
   }
 }
 
-extension AccessoryViewController: HMAccessoryDelegate {
-  func accessory(_ accessory: HMAccessory, service: HMService, didUpdateValueFor characteristic: HMCharacteristic) {
-    collectionView?.reloadData()
-  }
-}
+// 3. Have AccessoryViewController implement HMAccessoryBrowserDelegate
 
-extension AccessoryViewController: HMAccessoryBrowserDelegate {
-  func accessoryBrowser(_ browser: HMAccessoryBrowser, didFindNewAccessory accessory: HMAccessory) {
-    discoveredAccessories.append(accessory)
-  }
-}
+// 6. Have AccessoryViewController implement HMAccessoryDelegate to detect changes in accessory
 
 extension HMAccessory {
   func find(serviceType: String, characteristicType: String) -> HMCharacteristic? {
